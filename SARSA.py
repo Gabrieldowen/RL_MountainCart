@@ -19,10 +19,10 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 
 	for episode in range(numEpisodes):
 		
-		print("\n\n\n NEW EPISODE \n\n\n")
+		print(f"\n\n\n NEW EPISODE \n\n\n current epsilon: {epsilon}")
 		time.sleep(1)
 
-		epsilon -= epsilon*0.2
+		epsilon -= 0.1
 		print(epsilon)
 		stateMetrics, info = env.reset(seed=42)
 
@@ -52,7 +52,7 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 				HighScoreVel = velocity
 
 			# adjust the reward
-			reward += velocity * 15 + x * 3  
+			reward += velocity  + (abs(x) )^3  
 
 
 			# get the next action
@@ -69,7 +69,7 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 
 			if terminated or truncated:
 				print(f"\n\n GAME OVER FOR \nterminated: {terminated}\ntruncated: {truncated}")
-				print(f"\n HighScoreX: {HighScoreX}\n HighScoreVel: {HighScoreX}")
+				print(f"\n HighScoreX: {HighScoreX}\n HighScoreVel: {HighScoreX} sizeofStates: {np.count_nonzero(stateTable)}")
 				break
 				
 	return stateTable
