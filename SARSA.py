@@ -39,21 +39,26 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 			# take action
 			nextStateMetrics, reward, terminated, truncated, info = env.step(action)
 
-			if nextStateMetrics[0] > HighScoreX:
-				HighScoreX = nextStateMetrics[0]
-			if nextStateMetrics[1] > HighScoreVel:
-				HighScoreVel = nextStateMetrics[1]
-
-			# change reward to be posative for movement
-			reward += abs(nextStateMetrics[1]) * 100 + abs(nextStateMetrics[0])  
-
+			
 			# gets the state as a result
-			nextState = (round(nextStateMetrics[0]*100)+45) * abs(round(nextStateMetrics[1]*1000))
+			x = round(nextStateMetrics[0]*100)+45
+			velocity = abs(round(nextStateMetrics[1]*1000))
+			nextState = x * velocity
+
+			# Keeps highscores
+			if x > HighScoreX:
+				HighScoreX = x
+			if velocity > HighScoreVel:
+				HighScoreVel = velocity
+
+			# adjust the reward
+			reward += velocity * 15 + x * 3  
+
 
 			# get the next action
 			nextAction = policy(stateTable, state, epsilon)
 
-			print(f"\n pos {round(stateMetrics[0]*100)+45} velo: {abs(round(stateMetrics[1]*1000))} result: {state}")
+			print(f"\n pos {x} velo: {velocity} result: {state}")
 
 			# q_table[state, action] += alpha * (reward + gamma * q_table[next_state, next_action] - q_table[state, action])
 
