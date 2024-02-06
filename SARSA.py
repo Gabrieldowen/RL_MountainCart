@@ -7,7 +7,7 @@ import time
 
 # nextStateMetrics [x-axis (-1.2 to 0.6), velocity(-0.07 to 0.07)]
 
-def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
+def Learn(env, numEpisodes=3, epsilon=0.50, alpha=0.1, gamma=0.99):
 
 	
 
@@ -22,13 +22,13 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 		print(f"\n\n\n NEW EPISODE \n\n\n current epsilon: {epsilon}")
 		time.sleep(1)
 
-		epsilon -= 0.1
+		
 		print(epsilon)
 		stateMetrics, info = env.reset(seed=42)
 
 		# get initial state and action
 		state = (round(stateMetrics[0]*100)+45) * abs(round(stateMetrics[1]*1000))
-		action = policy(stateTable, state, epsilon)
+		action = np.array([policy(stateTable, state, epsilon)-1])
 		print(f"\n pos {round(stateMetrics[0]*100)+45} velo: {abs(round(stateMetrics[1]*1000))} result: {state}")
 
 
@@ -39,10 +39,11 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 			# take action
 			nextStateMetrics, reward, terminated, truncated, info = env.step(action)
 
+			print(f"\n\n{nextStateMetrics[0]} {type(nextStateMetrics[0])}\n\n")
 			
 			# gets the state as a result
-			x = round(nextStateMetrics[0]*100)+45
-			velocity = abs(round(nextStateMetrics[1]*1000))
+			x = int(np.round(nextStateMetrics[0]*100)+45)
+			velocity = int(abs(np.round(nextStateMetrics[1]*1000)))
 			nextState = x * velocity
 
 			# Keeps highscores
@@ -52,7 +53,10 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 				HighScoreVel = velocity
 
 			# adjust the reward
-			reward += velocity  + (abs(x) )^3  
+			if x > 0:
+				reward += velocity  * 10+ (abs(x) )**2  
+			else:
+				reward += velocity * 10 + (abs(x) )  
 
 
 			# get the next action
@@ -62,12 +66,13 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 
 			# q_table[state, action] += alpha * (reward + gamma * q_table[next_state, next_action] - q_table[state, action])
 
-			stateTable[state, action] += alpha*(reward+gamma*stateTable[nextState, nextAction] - stateTable[state, action])
+			stateTable[state, action[0]] += alpha*(reward+gamma*stateTable[nextState, nextAction[0]] - stateTable[state, action[0]])
 			
 			state = nextState
 			action = nextAction
 
 			if terminated or truncated:
+				epsilon -= 0.25
 				print(f"\n\n GAME OVER FOR \nterminated: {terminated}\ntruncated: {truncated}")
 				print(f"\n HighScoreX: {HighScoreX}\n HighScoreVel: {HighScoreX} sizeofStates: {np.count_nonzero(stateTable)}")
 				break
@@ -78,7 +83,7 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 def policy(stateTable, state, epsilon):
 	if np.random.rand() > epsilon:
 		print(f"\nfollow ")
-		return np.random.choice(len(stateTable[state]))
+		return np.array([np.random.choice(len(stateTable[state] -1))])
 	else:
 		print(f"\nexplore")
-		return np.argmax(stateTable[state])	
+		return np.array([np.argmax(stateTable[state])-1])	

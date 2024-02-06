@@ -1,7 +1,10 @@
 import gymnasium as gym
 import SARSA
-env = gym.make("MountainCar-v0", render_mode="human")
+import sandbox
 
+env = gym.make("MountainCarContinuous-v0", render_mode="human")
+
+#sandbox.sandbox(env)
 SARSA.Learn(env)
 
 env.close()
