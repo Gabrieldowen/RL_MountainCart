@@ -52,7 +52,10 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 				HighScoreVel = velocity
 
 			# adjust the reward
-			reward += velocity  + (abs(x) )^3  
+			if x > 0:
+				reward += velocity * (abs(x) )^3  
+			else:
+				reward += velocity  * (abs(x) )^2
 
 
 			# get the next action
