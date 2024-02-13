@@ -7,11 +7,11 @@ import time
 
 # nextStateMetrics [x-axis (-1.2 to 0.6), velocity(-0.07 to 0.07)]
 
-def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
+def Learn(env, numEpisodes=10, epsilon=0.5, alpha=0.1, gamma=0.99):
 
 	
 
-	stateTable = np.zeros((8250, 3)) 
+	stateTable = np.zeros((33000, 3)) 
 
 	# initialize high score
 	HighScoreX = 0
@@ -22,14 +22,14 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 		print(f"\n\n\n NEW EPISODE \n\n\n current epsilon: {epsilon}")
 		time.sleep(1)
 
-		epsilon -= 0.1
+		epsilon -= 0.05
 		print(epsilon)
 		stateMetrics, info = env.reset(seed=42)
 
 		# get initial state and action
-		state = (round(stateMetrics[0]*100)+45) * abs(round(stateMetrics[1]*1000))
+		state = (round(stateMetrics[0]*1000)+45) * abs(round(stateMetrics[1]*1000))
 		action = policy(stateTable, state, epsilon)
-		print(f"\n pos {round(stateMetrics[0]*100)+45} velo: {abs(round(stateMetrics[1]*1000))} result: {state}")
+		print(f"\n pos {round(stateMetrics[0]*100)+45} velo: {abs(round(stateMetrics[1]*2000))} result: {state}")
 
 
 		for _ in range(1000):
@@ -53,9 +53,9 @@ def Learn(env, numEpisodes=10, epsilon=0.9, alpha=0.1, gamma=0.99):
 
 			# adjust the reward
 			if x > 0:
-				reward += velocity * (abs(x) )^3  
+				reward += (velocity*0.8) * (abs(x))**1.2  
 			else:
-				reward += velocity  * (abs(x) )^2
+				reward += (velocity*0.8)  * (abs(x))**1.6
 
 
 			# get the next action
