@@ -7,7 +7,7 @@ import time
 
 # nextStateMetrics [x-axis (-1.2 to 0.6), velocity(-0.07 to 0.07)]
 
-def Learn(env, numEpisodes=10, epsilon=0.5, alpha=0.1, gamma=0.99):
+def Learn(env, numEpisodes=10, epsilon=1, alpha=0.1, gamma=0.99):
 
 	
 
@@ -19,10 +19,10 @@ def Learn(env, numEpisodes=10, epsilon=0.5, alpha=0.1, gamma=0.99):
 
 	for episode in range(numEpisodes):
 		
-		print(f"\n\n\n NEW EPISODE \n\n\n current epsilon: {epsilon}")
+		print(f"\n\n\n NEW EPISODE {episode} \n\n\n current epsilon: {epsilon}")
 		time.sleep(1)
 
-		epsilon -= 0.05
+		epsilon = 1/(episode+1)
 		print(epsilon)
 		stateMetrics, info = env.reset(seed=42)
 
@@ -53,15 +53,15 @@ def Learn(env, numEpisodes=10, epsilon=0.5, alpha=0.1, gamma=0.99):
 
 			# adjust the reward
 			if x > 0:
-				reward += (velocity*0.8) * (abs(x))**1.2  
+				reward += (velocity*0.8) * (abs(x))
 			else:
-				reward += (velocity*0.8)  * (abs(x))**1.6
+				reward += (velocity*0.8)  * (abs(x))
 
 
 			# get the next action
 			nextAction = policy(stateTable, state, epsilon)
 
-			print(f"\n pos {x} velo: {velocity} result: {state}")
+			print(f"\n ep: {episode+1} pos: {x} velo: {velocity} result: {state} print: {nextAction}")
 
 			# q_table[state, action] += alpha * (reward + gamma * q_table[next_state, next_action] - q_table[state, action])
 
@@ -81,7 +81,8 @@ def Learn(env, numEpisodes=10, epsilon=0.5, alpha=0.1, gamma=0.99):
 def policy(stateTable, state, epsilon):
 	if np.random.rand() > epsilon:
 		print(f"\nfollow ")
-		return np.random.choice(len(stateTable[state]))
+		return np.argmax(stateTable[state])	
 	else:
 		print(f"\nexplore")
-		return np.argmax(stateTable[state])	
+		return np.random.choice([0, 1, 2])
+		
