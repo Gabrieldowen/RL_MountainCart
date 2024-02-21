@@ -5,6 +5,6 @@ env = gym.make("MountainCar-v0", render_mode='none')
 env._max_episode_steps = 700
 
 
-SARSA.Learn(env)
+SARSA.Learn(env, numEpisodes=100)
 
 env.close()

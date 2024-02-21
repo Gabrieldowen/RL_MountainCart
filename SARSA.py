@@ -3,6 +3,7 @@ import csv
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 # What each action does
 	# 0: accelerate left
 	# 1: Dont accelerate
@@ -95,6 +96,10 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 
 				with open('results/sarsaResults.csv', mode='a', newline='') as file:
 				    writer = csv.writer(file)
+
+				    if os.path.getsize('results/sarsaResults.csv') == 0:
+        				writer.writerow(['episode','victory','episodeHighScoreX','episodeHighScoreVel','HighScoreX','HighScoreVel','epsilon','stateTableSize1\n'])
+
 				    writer.writerow([episode+1, terminated,episodeHighScoreX, episodeHighScoreVel, HighScoreX, HighScoreVel, epsilon, np.count_nonzero(stateTable)])
 				break
 				
