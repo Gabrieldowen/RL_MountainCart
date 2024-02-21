@@ -34,8 +34,8 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 		stateMetrics, info = env.reset(seed=42)
 
 		# get initial state and action
-		state = (round(stateMetrics[0]*1000)+45) * abs(round(stateMetrics[1]*1000))
-		action, policyChoice = policy(stateTable, state, epsilon)
+		state = int(str(round(stateMetrics[0]*1000)+45) + str(abs(round(stateMetrics[1]*1000))))
+		action, policyChoice = policy(stateTable, state, epsilon,episode, numEpisodes, 0)
 
 		if env.render_mode == 'human':
 			print(f"\n pos {round(stateMetrics[0]*100)+45} velo: {abs(round(stateMetrics[1]*2000))} result: {state}")
@@ -45,7 +45,7 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 		victory = False
 
 
-		for _ in range(1000):
+		for step in range(1000):
 
 
 			
@@ -56,7 +56,7 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			# gets the state as a result
 			x = round(nextStateMetrics[0]*100)+45
 			velocity = abs(round(nextStateMetrics[1]*1000))
-			nextState = x * velocity
+			nextState = int(str(x)+str(velocity))
 
 			# Keeps total highscores
 			if x > HighScoreX:
@@ -74,12 +74,12 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			if x > 0:
 				reward += (velocity*0.5) + (abs(x)*1.5)
 			else:
-				reward += (velocity*0.5)  + (abs(x))
+				reward += (velocity*0.5)  + (abs(x)/2)
 
 
 
 			# get the next action
-			nextAction, policyChoice = policy(stateTable, state, epsilon)
+			nextAction, policyChoice = policy(stateTable, state, epsilon,episode, numEpisodes,step)
 
 			if env.render_mode == 'human':
 				print(f"\n ep: {episode+1} policy: {policyChoice} pos: {x} velo: {velocity} result: {state} print: {nextAction}")
@@ -127,14 +127,14 @@ def plotLearning(numEpisodes):
 	ax1.scatter(victoryRows['episode'], victoryRows['episodeHighScoreX'], color='red', label='Victory')
 	ax1.set_xlabel('episode')
 	ax1.set_ylabel('HighScoreX')
-	ax1.set_title('x learning rate')
+	ax1.set_title('highest x per episode')
 
 	# Plot the second graph
 	ax2.plot(episode, HighScoreVel, color='red')
 	ax2.scatter(victoryRows['episode'], victoryRows['episodeHighScoreVel'], color='blue', label='Victory')
 	ax2.set_xlabel('episode')
 	ax2.set_ylabel('HighScoreVel')
-	ax2.set_title('vel learning rate')
+	ax2.set_title('highest Velocity per episode')
 
 	# Adjust layout to prevent overlap
 	plt.tight_layout()
@@ -144,9 +144,20 @@ def plotLearning(numEpisodes):
 
 
 # epsilon greedy
-def policy(stateTable, state, epsilon):
-	if np.random.rand() > epsilon:
-		return np.argmax(stateTable[state]), "follow"	
+def policy(stateTable, state, epsilon, episode, numEpisodes, step):
+	if episode < numEpisodes/2  or step<episode*5:
+		if np.random.rand() > epsilon:
+			return np.argmax(stateTable[state]), "follow"	
+		else:
+			return np.random.choice([0, 1, 2]), "explore"
+
 	else:
-		return np.random.choice([0, 1, 2]), "explore"
+		if np.random.rand() > 0.5:
+			return np.argmax(stateTable[state]), "follow"	
+		else:
+			return np.random.choice([0, 1, 2]), "explore"
+
+
+
+	# maybe change so that in later episodes you only explore after following for a certain percentage of the episode
 		
