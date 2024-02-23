@@ -20,13 +20,11 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 
 	stateTable = np.zeros((len(xSpace),len(velSpace), 3)) 
 
-
-	# initialize high score
-	HighScoreX = 0
-	HighScoreVel = 0
-
 	for episode in range(numEpisodes):
-		
+
+		# initialize total score
+		totalReward = 0
+
 		# extra items
 		if env.render_mode == 'human':
 			print(f"\n\n\n NEW EPISODE {episode} \n\n\n current epsilon: {epsilon}")
@@ -66,26 +64,9 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			velBinNext = np.digitize(velocity, velSpace)
 
 			# adjust the reward
-			if x > 0:
-				reward += velocity + x
-			else:
-				reward += velocity + abs(x/2)
 
-			if x >=0.5:
-				reward += 100
 
-			# Keeps total highscores
-			if x > HighScoreX:
-				HighScoreX = x
-			if velocity > HighScoreVel:
-				HighScoreVel = velocity
-
-			# Keeps episode highscore
-			if x > episodeHighScoreX:
-				episodeHighScoreX = x
-			if velocity > episodeHighScoreVel:
-				episodeHighScoreVel = velocity
-
+			totalReward += reward	
 
 			# get the next action from epsilon greedy policy
 			nextAction, policyChoice = policy(stateTable[xBinNext, velBinNext, :], epsilon)
@@ -108,9 +89,9 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 				    writer = csv.writer(file)
 
 				    if os.path.getsize('results/sarsaResults.csv') == 0:
-        				writer.writerow(['episode','victory','episodeHighScoreX','episodeHighScoreVel','HighScoreX','HighScoreVel','epsilon','stateTableSize1\n'])
+        				writer.writerow(['episode','victory','totalReward','epsilon\n'])
 
-				    writer.writerow([episode+1, terminated,episodeHighScoreX, episodeHighScoreVel, HighScoreX, HighScoreVel, epsilon, np.count_nonzero(stateTable)])
+				    writer.writerow([episode+1, terminated,totalReward,epsilon])
 				break
 				
 	plotLearning(numEpisodes)
@@ -134,17 +115,17 @@ def plotLearning(numEpisodes):
 
     # gets values to plot
     episode = lastSession['episode']
-    HighScoreX = lastSession['episodeHighScoreX']
+    totalReward = lastSession['totalReward']
 
     # Create a figure and a single subplot
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
     # Plot the data
-    ax1.plot(episode, HighScoreX, color='blue')
-    ax1.scatter(victoryRows['episode'], victoryRows['episodeHighScoreX'], color='red', label='Victory')
+    ax1.plot(episode, totalReward, color='blue')
+    ax1.scatter(victoryRows['episode'], victoryRows['totalReward'], color='red', label='Victory')
     ax1.set_xlabel('Episode')
-    ax1.set_ylabel('HighScoreX')
-    ax1.set_title('Highest X per Episode')
+    ax1.set_ylabel('totalReward')
+    ax1.set_title('totalReward per Episode')
 
     # Show the plot
     plt.show()
