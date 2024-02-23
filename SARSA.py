@@ -11,32 +11,31 @@ import os
 
 # nextStateMetrics [x-axis (-1.2 to 0.6), velocity(-0.07 to 0.07)]
 
-def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
+def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, stateTable=None):
 
 	
 	# create space for velocity and pos
-	xSpace = np.linspace(-1.2, 0.6, 40)    # Between -1.2 and 0.6
-	velSpace = np.linspace(-0.7, 0.07, 40)
+	xSpace = np.linspace(-1.2, 0.6, 60)    # Between -1.2 and 0.6
+	velSpace = np.linspace(-0.7, 0.07, 60)
 
-	stateTable = np.zeros((len(xSpace),len(velSpace), 3)) 
+	if stateTable is None:
+		stateTable = np.zeros((len(xSpace),len(velSpace), 3)) 
 
 	for episode in range(numEpisodes):
 
 		# initialize total score
 		totalReward = 0
 
-		# extra items
-		if env.render_mode == 'human':
-			print(f"\n\n\n NEW EPISODE {episode} \n\n\n current epsilon: {epsilon}")
-			print(f"\n totalHighScoreX: {HighScoreX}\n totalHighScoreVel: {HighScoreX} sizeofStates: {np.count_nonzero(stateTable)}")
-
-			time.sleep(1)
 		episodeHighScoreX = 0
-		episodeHighScoreVel = 0
 		victory = False
 
 		# update epsilon for next episode
-		epsilon =  1 - (episode / numEpisodes)
+		epsilon =  initialEpsilon / (episode+1)
+
+		# extra items
+		if env.render_mode == 'human':
+			print(f"\n\n\n NEW EPISODE {episode} \n\n\n current epsilon: {epsilon}")
+			time.sleep(1)
 
 		# reset the game for the new episode
 		stateMetrics, info = env.reset(seed=42)
@@ -45,7 +44,7 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 		velBin = np.digitize(stateMetrics[1], velSpace)
 
 		# get initial state and action
-		action, policyChoice = policy(stateTable[xBin, velBin, :], epsilon)
+		action = policy(stateTable[xBin, velBin, :], epsilon)
 
 
 
@@ -63,16 +62,18 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			xBinNext = np.digitize(x, xSpace)
 			velBinNext = np.digitize(velocity, velSpace)
 
-			# adjust the reward
+			# Keeps episode highscore
+			if x > episodeHighScoreX:
+				episodeHighScoreX = x
 
+			if x >=0.5:
+				reward += 10	
 
+			# keeps total reward per episode
 			totalReward += reward	
 
 			# get the next action from epsilon greedy policy
-			nextAction, policyChoice = policy(stateTable[xBinNext, velBinNext, :], epsilon)
-
-			if env.render_mode == 'human':
-				print(f"\n ep: {episode+1} policy: {policyChoice} pos: {x} velo: {velocity} n/a: {nextAction}")
+			nextAction = policy(stateTable[xBinNext, velBinNext, :], epsilon)
 
 			# q_table[state, action] += alpha * (reward + gamma * q_table[next_state, next_action] - q_table[state, action])
 			stateTable[xBin, velBin, action] += alpha*(reward+gamma*stateTable[xBinNext, velBin, nextAction] - stateTable[xBin, velBin, action])
@@ -85,50 +86,62 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			if terminated or truncated:
 				print(f"\n\n GAME OVER FOR EPISODE {episode+1}\nterminated: {terminated}\ntruncated: {truncated}")
 
-				with open('results/sarsaResults.csv', mode='a', newline='') as file:
-				    writer = csv.writer(file)
+				if env.render_mode == 'none':
+					with open('results/sarsaResults.csv', mode='a', newline='') as file:
+					    writer = csv.writer(file)
 
-				    if os.path.getsize('results/sarsaResults.csv') == 0:
-        				writer.writerow(['episode','victory','totalReward','epsilon\n'])
+					    if os.path.getsize('results/sarsaResults.csv') == 0:
+	        				writer.writerow(['episode','victory','totalReward','episodeHighScoreX','epsilon\n'])
 
-				    writer.writerow([episode+1, terminated,totalReward,epsilon])
+					    writer.writerow([episode+1, terminated,totalReward, episodeHighScoreX,epsilon])
 				break
 				
-	plotLearning(numEpisodes)
 	return stateTable
 
 
 # epsilon greedy
 def policy(nextStateActions, epsilon):
 	if np.random.rand() > epsilon:
-		return np.argmax(nextStateActions), "follow"	
+		return np.argmax(nextStateActions)	
 	else:
-		return np.random.choice([0, 1, 2]), "explore"
+		return np.random.choice([0, 1, 2])
 
 
 def plotLearning(numEpisodes):
-    df = pd.read_csv('results/sarsaResults.csv')
-    lastSession = df.tail(numEpisodes)
+	df = pd.read_csv('results/sarsaResults.csv')
+	lastSession = df.tail(numEpisodes)
 
-    # Filter DataFrame to include only rows where 'victory' is true
-    victoryRows = lastSession[lastSession['victory']]
+	# Calculate the rolling average of total totalReward with a window size of 10
+	rollingAvg = lastSession['totalReward'].rolling(window=10).mean()
 
-    # gets values to plot
-    episode = lastSession['episode']
-    totalReward = lastSession['totalReward']
+	# Filter DataFrame to include only rows where 'victory' is true
+	victoryRows = lastSession[lastSession['victory']]
 
-    # Create a figure and a single subplot
-    fig, ax1 = plt.subplots(figsize=(12, 6))
+	# Gets values to plot
+	episode = lastSession['episode'].iloc[::10]  # Select every 10th episode
+	totalReward = rollingAvg.iloc[::10]  # Select corresponding rolling average values
 
-    # Plot the data
-    ax1.plot(episode, totalReward, color='blue')
-    ax1.scatter(victoryRows['episode'], victoryRows['totalReward'], color='red', label='Victory')
-    ax1.set_xlabel('Episode')
-    ax1.set_ylabel('totalReward')
-    ax1.set_title('totalReward per Episode')
+	# Create a figure and a single subplot
+	fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    # Show the plot
-    plt.show()
+	# Plot the data
+	ax1.plot(episode, totalReward, color='blue')
+	ax1.set_xlabel('Episode')
+	ax1.set_ylabel('Total Reward')
+	ax1.set_title('Average Total Reward Every 10 Episodes')
 
+	firstVictoryIndex = victoryRows['episode'].iloc[0]
+
+	# Add a vertical line at that index on the plot
+	ax1.axvline(x=firstVictoryIndex, color='red', linestyle='--', label='First Victory')
+
+	ax1.legend()
+
+	# Show the plot
+	plt.show()
+
+
+if __name__ == "__main__":
+	plotLearning(1000)
 
 		
