@@ -14,8 +14,12 @@ import os
 def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 
 	
+	# create space for velocity and pos
+	xSpace = np.linspace(-1.2, 0.6, 40)    # Between -1.2 and 0.6
+	velSpace = np.linspace(-0.7, 0.07, 40)
 
-	stateTable = np.zeros((33000, 3)) 
+	stateTable = np.zeros((len(xSpace),len(velSpace), 3)) 
+
 
 	# initialize high score
 	HighScoreX = 0
@@ -39,9 +43,11 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 		# reset the game for the new episode
 		stateMetrics, info = env.reset(seed=42)
 
+		xBin = np.digitize(stateMetrics[0], xSpace)
+		velBin = np.digitize(stateMetrics[1], velSpace)
+
 		# get initial state and action
-		state = int(str(round(stateMetrics[0]*100)+45) + str(abs(round(stateMetrics[1]*200))))
-		action, policyChoice = policy(stateTable, state, epsilon)
+		action, policyChoice = policy(stateTable[xBin, velBin, :], epsilon)
 
 
 
@@ -52,16 +58,21 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 			# take action observe reward and nextState
 			nextStateMetrics, reward, terminated, truncated, info = env.step(action)
 
-			# adjust/scale the next state values
-			x = round(nextStateMetrics[0]*100)+45
-			velocity = abs(round(nextStateMetrics[1]*200))
-			nextState = int(str(x) + str(velocity))
+
+			x = nextStateMetrics[0]
+			velocity = nextStateMetrics[1]
+
+			xBinNext = np.digitize(x, xSpace)
+			velBinNext = np.digitize(velocity, velSpace)
 
 			# adjust the reward
 			if x > 0:
-				reward += nextStateMetrics[1] + nextStateMetrics[0]
+				reward += velocity + x
 			else:
-				reward += nextStateMetrics[0] + abs(nextStateMetrics[0])
+				reward += velocity + abs(x/2)
+
+			if x >=0.5:
+				reward += 100
 
 			# Keeps total highscores
 			if x > HighScoreX:
@@ -77,17 +88,17 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 
 
 			# get the next action from epsilon greedy policy
-			nextAction, policyChoice = policy(stateTable, state, epsilon)
+			nextAction, policyChoice = policy(stateTable[xBinNext, velBinNext, :], epsilon)
 
 			if env.render_mode == 'human':
-				print(f"\n ep: {episode+1} policy: {policyChoice} pos: {x} velo: {velocity} state: {state} n/a: {nextAction}")
+				print(f"\n ep: {episode+1} policy: {policyChoice} pos: {x} velo: {velocity} n/a: {nextAction}")
 
 			# q_table[state, action] += alpha * (reward + gamma * q_table[next_state, next_action] - q_table[state, action])
-
-			stateTable[state, action] += alpha*(reward+gamma*stateTable[nextState, nextAction] - stateTable[state, action])
+			stateTable[xBin, velBin, action] += alpha*(reward+gamma*stateTable[xBinNext, velBin, nextAction] - stateTable[xBin, velBin, action])
 
 			# moves to the next state			
-			state = nextState
+			xBin = xBinNext
+			velBin = velBinNext
 			action = nextAction
 
 			if terminated or truncated:
@@ -105,48 +116,38 @@ def Learn(env, numEpisodes=100, epsilon=1, alpha=0.1, gamma=0.99):
 	plotLearning(numEpisodes)
 	return stateTable
 
+
 # epsilon greedy
-def policy(stateTable, state, epsilon):
+def policy(nextStateActions, epsilon):
 	if np.random.rand() > epsilon:
-		return np.argmax(stateTable[state]), "follow"	
+		return np.argmax(nextStateActions), "follow"	
 	else:
 		return np.random.choice([0, 1, 2]), "explore"
 
+
 def plotLearning(numEpisodes):
-	df = pd.read_csv('results/sarsaResults.csv')
-	lastSession = df.tail(numEpisodes)
+    df = pd.read_csv('results/sarsaResults.csv')
+    lastSession = df.tail(numEpisodes)
 
-	# Filter DataFrame to include only rows where 'victory' is true
-	victoryRows = lastSession[lastSession['victory']]
+    # Filter DataFrame to include only rows where 'victory' is true
+    victoryRows = lastSession[lastSession['victory']]
 
-	# gets values to plot
-	episode = lastSession['episode']
-	HighScoreX = lastSession['episodeHighScoreX']
-	HighScoreVel = lastSession['episodeHighScoreVel']
+    # gets values to plot
+    episode = lastSession['episode']
+    HighScoreX = lastSession['episodeHighScoreX']
 
+    # Create a figure and a single subplot
+    fig, ax1 = plt.subplots(figsize=(12, 6))
 
-	# Create a figure and two subplots
-	fig, (ax1, ax2) = plt.subplots(2)
+    # Plot the data
+    ax1.plot(episode, HighScoreX, color='blue')
+    ax1.scatter(victoryRows['episode'], victoryRows['episodeHighScoreX'], color='red', label='Victory')
+    ax1.set_xlabel('Episode')
+    ax1.set_ylabel('HighScoreX')
+    ax1.set_title('Highest X per Episode')
 
-	# Plot the first graph
-	ax1.plot(episode, HighScoreX, color='blue')
-	ax1.scatter(victoryRows['episode'], victoryRows['episodeHighScoreX'], color='red', label='Victory')
-	ax1.set_xlabel('episode')
-	ax1.set_ylabel('HighScoreX')
-	ax1.set_title('highest x per episode')
-
-	# Plot the second graph
-	ax2.plot(episode, HighScoreVel, color='red')
-	ax2.scatter(victoryRows['episode'], victoryRows['episodeHighScoreVel'], color='blue', label='Victory')
-	ax2.set_xlabel('episode')
-	ax2.set_ylabel('HighScoreVel')
-	ax2.set_title('highest velocity per episode')
-
-	# Adjust layout to prevent overlap
-	plt.tight_layout()
-
-	# Show the plots
-	plt.show()
+    # Show the plot
+    plt.show()
 
 
 		
