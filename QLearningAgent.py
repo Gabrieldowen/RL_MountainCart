@@ -75,4 +75,16 @@ class QLearningAgent():
         axs[1].set_title("Step Count")
     
         plt.show()     
-        
+    
+    def plotRewards(self):    
+        smoothRewards = []
+        for i in range(0, self.numEpisodes, 10):
+            avg = 0
+            for j in range(i, i + 10):
+                avg += self.rewardsPerEpisode[j]
+            smoothRewards.append(avg / 10)
+        plt.plot(smoothRewards)
+        plt.ylabel("Average Reward")
+        plt.xlabel("Group of 10 Epsiodes")
+        plt.suptitle("Avg Reward per 10 Episodes")
+        plt.show()        
