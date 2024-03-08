@@ -33,4 +33,4 @@ def plotLearning(numEpisodes):
 	ax1.legend()
 
 	# Show the plot
-	plt.show()
+	plt.show(block=False)
