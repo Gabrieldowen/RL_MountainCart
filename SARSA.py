@@ -100,13 +100,7 @@ if __name__ == "__main__":
 	# train
 	env = gym.make("MountainCar-v0", render_mode='none')
 	env._max_episode_steps = 1000
-	stateTable = Learn(env, numEpisodes-1)
+	stateTable = Learn(env, numEpisodes)
 	env.close()
 
-	# show agent without learning just following the stateTable
-	env = gym.make("MountainCar-v0", render_mode='human')
-	env._max_episode_steps = 1000
-	Learn(env, numEpisodes=1, initialEpsilon=0, alpha=0.1, gamma=0.99, stateTable = stateTable)
-	env.close()
-
-	plotLearning(numEpisodes, "sarsaResults.csv")
+	plotLearningAverage(numEpisodes, "sarsaResults.csv", numRuns)

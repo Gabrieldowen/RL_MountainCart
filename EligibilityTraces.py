@@ -101,4 +101,4 @@ if __name__ == "__main__":
 	Learn(env, numEpisodes=1, initialEpsilon=0, alpha=0.1, gamma=0.99, stateTable = stateTable)
 	env.close()
 
-	plotLearning(numEpisodes, "eligibityTraces.csv")
+	plotLearning(numEpisodes, "eligibityTraces.csv", numRuns=1)
