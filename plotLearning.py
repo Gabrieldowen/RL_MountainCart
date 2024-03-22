@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def plotLearning(numEpisodes):
-	df = pd.read_csv('results/sarsaResults.csv')
+def plotLearning(numEpisodes, fileName):
+	print("\nPlotting Learning...\n")
+	df = pd.read_csv(f'results/{fileName}')
 	lastSession = df.tail(numEpisodes)
 
 	# Calculate the rolling average of total totalReward with a window size of 10
@@ -33,4 +34,4 @@ def plotLearning(numEpisodes):
 	ax1.legend()
 
 	# Show the plot
-	plt.show(block=False)
+	plt.show()

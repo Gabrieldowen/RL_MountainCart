@@ -2,6 +2,9 @@ import numpy as np
 import csv
 import time
 import os
+import gymnasium as gym
+import EligibilityTraces as ET
+from plotLearning import plotLearning 
 # What each action does
 	# 0: accelerate left
 	# 1: Dont accelerate
@@ -90,5 +93,20 @@ def policy(nextStateActions, epsilon):
 	else:
 		return np.random.choice([0, 1, 2])
 
-
 		
+if __name__ == "__main__":
+	numEpisodes = 1000
+
+	# train
+	env = gym.make("MountainCar-v0", render_mode='none')
+	env._max_episode_steps = 1000
+	stateTable = Learn(env, numEpisodes-1)
+	env.close()
+
+	# show agent without learning just following the stateTable
+	env = gym.make("MountainCar-v0", render_mode='human')
+	env._max_episode_steps = 1000
+	Learn(env, numEpisodes=1, initialEpsilon=0, alpha=0.1, gamma=0.99, stateTable = stateTable)
+	env.close()
+
+	plotLearning(numEpisodes, "sarsaResults.csv")

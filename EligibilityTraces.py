@@ -1,6 +1,13 @@
+import numpy as np
+import csv
+import time
+import os
+import gymnasium as gym
+import EligibilityTraces as ET
+from plotLearning import plotLearning 
 # eligiblity traces for sarsa
 
-def learnEligibilityTraces(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, lambda_=0.9, stateTable=None):
+def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, lambda_=0.9, stateTable=None):
 
 	# create space for velocity and pos
 	xSpace = np.linspace(-1.2, 0.6, 60)    # Between -1.2 and 0.6
@@ -63,9 +70,9 @@ def learnEligibilityTraces(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, ga
 			action = nextAction
 			if terminated or truncated:
 				print(f"\n\n GAME OVER FOR EPISODE {episode+1}\nWin: {terminated}\nTime: {truncated}")
-				with open('results/sarsaResults.csv', mode='a', newline='') as file:
+				with open('results/eligibityTraces.csv', mode='a', newline='') as file:
 					writer = csv.writer(file)
-					if os.path.getsize('results/sarsaResults.csv') == 0:
+					if os.path.getsize('results/eligibityTraces.csv') == 0:
 						writer.writerow(['episode', 'victory', 'totalReward', 'epsilon\n'])
 					writer.writerow([episode + 1, terminated, totalReward, epsilon])
 				break
@@ -78,3 +85,20 @@ def policy(nextStateActions, epsilon):
 		return np.argmax(nextStateActions)	
 	else:
 		return np.random.choice([0, 1, 2])
+	
+if __name__ == "__main__":
+	numEpisodes = 1000
+
+	# train
+	env = gym.make("MountainCar-v0", render_mode='none')
+	env._max_episode_steps = 1000
+	stateTable = Learn(env, numEpisodes-1)
+	env.close()
+
+	# show agent without learning just following the stateTable
+	env = gym.make("MountainCar-v0", render_mode='human')
+	env._max_episode_steps = 1000
+	Learn(env, numEpisodes=1, initialEpsilon=0, alpha=0.1, gamma=0.99, stateTable = stateTable)
+	env.close()
+
+	plotLearning(numEpisodes, "eligibityTraces.csv")
