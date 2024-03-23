@@ -42,7 +42,7 @@ elif choice == 3:
     QRunner.runQ(1, 1000, 500)
 
 elif choice == 4:
-    MonteCarlo.runMC(1, 1000, 5)
+    MonteCarlo.runMC(1, 1000, 500)
 
 else:
     print("Invalid choice. Please enter 1 - 4.")
