@@ -70,9 +70,9 @@ def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, lambda_
 			action = nextAction
 			if terminated or truncated:
 				print(f"\n\n GAME OVER FOR EPISODE {episode+1}\nWin: {terminated}\nTime: {truncated}")
-				with open('results/eligibityTraces.csv', mode='a', newline='') as file:
+				with open('results/eligibilityTraces.csv', mode='a', newline='') as file:
 					writer = csv.writer(file)
-					if os.path.getsize('results/eligibityTraces.csv') == 0:
+					if os.path.getsize('results/eligibilityTraces.csv') == 0:
 						writer.writerow(['episode', 'victory', 'totalReward', 'epsilon\n'])
 					writer.writerow([episode + 1, terminated, totalReward, epsilon])
 				break
@@ -101,4 +101,4 @@ if __name__ == "__main__":
 	Learn(env, numEpisodes=1, initialEpsilon=0, alpha=0.1, gamma=0.99, stateTable = stateTable)
 	env.close()
 
-	plotLearning(numEpisodes, "eligibityTraces.csv", numRuns=1)
+	plotLearning(numEpisodes, "eligibilityTraces.csv", numRuns=1)

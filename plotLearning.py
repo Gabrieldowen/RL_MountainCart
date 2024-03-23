@@ -59,7 +59,7 @@ def plotLearningAverage(numEpisodes, fileName, numRuns):
 
 	plt.xlabel('Episode')
 	plt.ylabel('Average Reward')
-	plt.title('Average Reward for Each Episode Over 10 Runs')
+	plt.title(f'Average Reward for Each Episode Over {numRuns} Runs')
 	plt.show()
 
 def plotAverages(numEpisodes, fileName1, fileName2, fileName3, fileName4, fileName5, numRuns):
