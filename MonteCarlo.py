@@ -74,7 +74,7 @@ def runMC(iters, nEps, epLength, states = 5):
     print(sum(rewardsPerEpisode) / len(rewardsPerEpisode))
     
 
-
-runMC(1, 2000, 200)
+if __name__ == '__main__':
+    runMC(1, 2000, 200)
 
 

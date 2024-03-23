@@ -76,5 +76,6 @@ def runQ(iters, nEps, epLength, states = 40):
             agent.decayEpsilon()
             agent.updateTotals(episode, totalReward, stepCount)
     
-# Run one time, with an 1000 episodes 200 steps in length
-runQ(1, 1000, 200)
+if __name__ == '__main__':
+    # Run one time, with an 1000 episodes 200 steps in length
+    runQ(1, 1000, 200)
