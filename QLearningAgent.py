@@ -13,7 +13,7 @@ class QLearningAgent():
         self.decayRate = decayRate
 
         # Create discrete state space. Velocity and Position are each divided into numStates    
-        self.posSpace = np.linspace(env.observation_space.low[0], env.observation_space.high[0], numStates)    # Between -1.2 and 0.6
+        self.posSpace = np.linspace(env.observation_space.low[0], env.observation_space.high[0], numStates)
         self.velSpace = np.linspace(env.observation_space.low[1], env.observation_space.high[1], numStates)
         
         # Create the qTable (initialized to zero)
@@ -44,47 +44,12 @@ class QLearningAgent():
         # Updates qTable for current observation
         self.qTable[discreteObs[0], discreteObs[1], action] += self.learningRate * reward + self.discount * TD
         
+    # Updates episodic stats    
     def updateTotals(self, episode, totalReward, stepCount):
         self.rewardsPerEpisode.append(totalReward)
         self.stepsPerEpisode.append(stepCount)  
-        
+    
+    # Slowly shifts actions from explore to exploit    
     def decayEpsilon(self):
         self.epsilon = max(self.epsilon - self.decayRate, 0)
-        
-    def plot(self):
-        smoothRewards = []
-        for i in range(0, self.numEpisodes, 10):
-            avg = 0
-            for j in range(i, i + 10):
-                avg += self.rewardsPerEpisode[j]
-            smoothRewards.append(avg / 10)
-        
-        smoothSteps = []
-        for i in range(0, self.numEpisodes, 10):
-            avg = 0
-            for j in range(i, i + 10):
-                avg += self.stepsPerEpisode[j]
-            smoothSteps.append(avg / 10)
-        
-        _, axs = plt.subplots(ncols=2, figsize=(12, 5))    
-        
-        axs[0].plot(smoothRewards)
-        axs[0].set_title("Rewards")
-    
-        axs[1].plot(smoothSteps)
-        axs[1].set_title("Step Count")
-    
-        plt.show()     
-    
-    def plotRewards(self):    
-        smoothRewards = []
-        for i in range(0, self.numEpisodes, 10):
-            avg = 0
-            for j in range(i, i + 10):
-                avg += self.rewardsPerEpisode[j]
-            smoothRewards.append(avg / 10)
-        plt.plot(smoothRewards)
-        plt.ylabel("Average Reward")
-        plt.xlabel("Group of 10 Epsiodes")
-        plt.suptitle("Avg Reward per 10 Episodes")
-        plt.show()        
+     

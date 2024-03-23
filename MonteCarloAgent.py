@@ -5,23 +5,22 @@ import itertools
 
 
 class MonteCarloAgent():
-    def __init__(self, env, numEpisodes, learningRate, discount, numStates, epsilon, decayRate):
+    def __init__(self, env, epsilon, numEpisodes, episodeLength, numStates, decayRate):
         self.env = env
         self.numEpisodes = numEpisodes
-        self.learningRate = learningRate
-        self.discount = discount
+        self.episodeLength = episodeLength
         self.numStates = numStates
         self.epsilon = epsilon
         self.decayRate = decayRate
 
         # Create discrete state space. Velocity and Position are each divided into numStates    
-        self.posSpace = np.linspace(env.observation_space.low[0], env.observation_space.high[0], numStates)    # Between -1.2 and 0.6
+        self.posSpace = np.linspace(env.observation_space.low[0], env.observation_space.high[0], numStates)
         self.velSpace = np.linspace(env.observation_space.low[1], env.observation_space.high[1], numStates)
         
         # Create the qTable (initialized to zero)
         self.qTable = np.zeros((len(self.posSpace), len(self.velSpace), env.action_space.n)) 
         
-        # Create empty returns arrays for each state
+        # Create empty returns arrays for each possible state
         indices = list(itertools.product(range(len(self.posSpace)), range(len(self.velSpace)), range(env.action_space.n)))
         self.returns = {index: [] for index in indices}
         
@@ -50,38 +49,52 @@ class MonteCarloAgent():
     def generateEpisode(self, episodeNum):
         terminated = False
         totalReward = 0
-    
+        stepCount = 0
+
+        # Get discretized version of initial state
         obs, _ = self.env.reset()
         discreteObs = self.discreteState(obs)
+        won = False
         
+        # Create arrays used for Monte Carlo updates
         stateActionReward = []
         stateAction = []
         
+        # Tracked for testing
         maxHeight = -1
-        
-        while not terminated and totalReward > -1000:
+                
+        # Run episode
+        while not terminated and totalReward > -1 * self.episodeLength:
             
             # Get action and subsequent observation
             action = self.getAction(discreteObs)
             nextObs, reward, terminated, _, _ = self.env.step(action)
-                        
+            
+            # Used for testing            
             if nextObs[0] > maxHeight:
                 maxHeight = nextObs[0]
             
-            stateActionReward.append((discreteObs[0], discreteObs[1], action, reward))
+            # Position, Velocity, Action, Reward (Q-State + Reward)
+            stateActionReward.append((discreteObs[0], discreteObs[1], action, reward, totalReward))
+            
+            # Position, Velocity, Action (Q-State)
             stateAction.append((discreteObs[0], discreteObs[1], action))
             
+            # Used for testing
             if terminated:
-                print("Episode #", episodeNum, "Won!")
+                #print("Episode #", episodeNum, "Won!")
+                won = True
         
             # Discretize next observation
             discreteNextObs = self.discreteState(nextObs)
             discreteObs = discreteNextObs
         
-            # Update reward and 
+            # Update reward  
             totalReward += reward
+            stepCount += 1
         
-        if episodeNum % 100 == 0:
-            print("Max Height", episodeNum, ":", maxHeight)
-        return stateActionReward, stateAction
+        # Occasionaly print out max height
+        #if episodeNum % 100 == 0:
+            #print("Max Height", episodeNum, ":", maxHeight)
             
+        return stateActionReward, stateAction, totalReward, stepCount, won
