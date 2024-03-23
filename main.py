@@ -3,15 +3,15 @@ import SARSA
 import EligibilityTraces as ET
 from plotLearning import plotLearning, plotLearningAverage 
 
-
 numEpisodes = 1000
 numRuns = 10
 
 for _ in range(numRuns):
     env = gym.make("MountainCar-v0", render_mode='none')
     env._max_episode_steps = 1000
-    stateTable = ET.Learn(env, numEpisodes)
+    stateTable = SARSA.Learn(env, numEpisodes)
     env.close()
+
     """
     # train
     env = gym.make("MountainCar-v0", render_mode='none')
@@ -26,4 +26,4 @@ for _ in range(numRuns):
     env.close()
     """
 
-plotLearningAverage( numEpisodes,'eligibilityTraces.csv', numRuns)
+# plotLearningAverage( numEpisodes,'eligibilityTraces.csv', numRuns)

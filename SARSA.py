@@ -12,7 +12,7 @@ from plotLearning import plotLearning
 
 # nextStateMetrics [x-axis (-1.2 to 0.6), velocity(-0.07 to 0.07)]
 
-def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, stateTable=None):
+def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.44, stateTable=None):
 
 	
 	# create space for velocity and pos
@@ -74,10 +74,10 @@ def Learn(env, numEpisodes=100, initialEpsilon=1, alpha=0.1, gamma=0.99, stateTa
 			if terminated or truncated:
 				print(f"\n\n GAME OVER FOR EPISODE {episode+1}\nWin: {terminated}\nTime: {truncated}")
 
-				with open('results/sarsaResults.csv', mode='a', newline='') as file:
+				with open('results/sarsaResults_g44.csv', mode='a', newline='') as file:
 					writer = csv.writer(file)
 
-					if os.path.getsize('results/sarsaResults.csv') == 0:
+					if os.path.getsize('results/sarsaResults_g44.csv') == 0:
 						writer.writerow(['episode','victory','totalReward','epsilon\n'])
 
 					writer.writerow([episode+1, terminated,totalReward,epsilon])
@@ -102,5 +102,3 @@ if __name__ == "__main__":
 	env._max_episode_steps = 1000
 	stateTable = Learn(env, numEpisodes)
 	env.close()
-
-	plotLearningAverage(numEpisodes, "sarsaResults.csv", numRuns)
